@@ -1,4 +1,7 @@
-# Flask Finance Tracker 🏦
+# SpendBetter 💰
+
+> **Live demo → https://ssingh1108.pythonanywhere.com**
+> Login: `demo@spendbetter.com` / `SpendBetter@1`
 
 A clean, production-ready **personal finance tracker** built with Flask and SQLite.
 Designed as a reusable template — spin up a new project by editing a single file.
@@ -153,11 +156,34 @@ pytest tests/test_auth.py    # single file
 
 ---
 
-## 🌐 Deployment (Render / Railway / Fly.io)
+## 🌐 Deployment
 
+### PythonAnywhere (free, no card required)
+1. Create a free account at https://www.pythonanywhere.com
+2. Open a Bash console and clone the repo:
+   ```bash
+   git clone https://github.com/solutiongate-learn/flask-finance-tracker.git
+   cd flask-finance-tracker
+   python3.10 -m venv venv && source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. **Web** tab → Add new web app → Manual configuration → Python 3.10
+4. Set source & working directory to `/home/YOUR_USERNAME/flask-finance-tracker`
+5. Replace the WSGI file contents with:
+   ```python
+   import sys, os
+   sys.path.insert(0, '/home/YOUR_USERNAME/flask-finance-tracker')
+   os.environ['DATABASE_PATH'] = '/home/YOUR_USERNAME/flask-finance-tracker/database/app.db'
+   os.environ['SECRET_KEY'] = 'your-secret-key-here'
+   from run import app as application
+   ```
+6. Set virtualenv to `/home/YOUR_USERNAME/flask-finance-tracker/venv`
+7. Click **Reload**
+
+### Other platforms (Render / Railway / Fly.io)
 1. Set `DEBUG=false` and a strong `SECRET_KEY` in your host's environment variables.
 2. Set `DATABASE_PATH` to a persistent volume path (e.g. `/data/app.db`).
-3. Start command: `gunicorn "run:app"` (install gunicorn: `pip install gunicorn`).
+3. Start command: `gunicorn "run:app"` (already in `render.yaml`).
 
 ---
 
