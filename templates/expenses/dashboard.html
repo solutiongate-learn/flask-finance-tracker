@@ -1,315 +1,365 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — {{ app_name }}{% endblock %}
 
-{% block head %}
-{% if features.charts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-{% endif %}
-<style>
-/* ── Dashboard layout ──────────────────────────────────────────── */
-.dashboard { max-width:var(--max-width); margin:0 auto; padding:2.5rem 2rem; }
-
-.dash-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
-.dash-greeting { font-family:var(--font-display); font-size:1.75rem; }
-.dash-greeting span { color:var(--accent); }
-.dash-actions { display:flex; gap:.75rem; flex-wrap:wrap; }
-
-/* ── Summary cards ─────────────────────────────────────────────── */
-.summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:2rem; }
-.summary-card { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem 1.5rem; }
-.s-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); margin-bottom:.3rem; }
-.s-value { font-family:var(--font-display); font-size:1.5rem; color:var(--ink); }
-.s-value.accent { color:var(--accent); }
-
-/* ── Charts ────────────────────────────────────────────────────── */
-.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2rem; }
-@media(max-width:700px){ .charts-row{ grid-template-columns:1fr; } }
-.chart-card { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.5rem; }
-.chart-title { font-family:var(--font-display); font-size:1rem; color:var(--ink); margin-bottom:1rem; }
-
-/* ── Budget bars ───────────────────────────────────────────────── */
-.budget-mini-section { margin-top:1.25rem; border-top:1px solid var(--border-soft); padding-top:1rem; }
-.budget-mini-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); margin-bottom:.75rem; }
-.b-row { display:flex; align-items:center; gap:.5rem; margin-bottom:.45rem; font-size:.78rem; }
-.b-cat { width:85px; color:var(--ink-soft); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.b-track { flex:1; height:5px; background:var(--border-soft); border-radius:999px; overflow:hidden; }
-.b-fill  { height:100%; border-radius:999px; transition:width .4s; }
-.b-pct  { width:32px; text-align:right; color:var(--ink-muted); }
-
-/* ── Filters ───────────────────────────────────────────────────── */
-.filters-bar { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem 1.5rem; display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap; margin-bottom:1.5rem; }
-.f-group { display:flex; flex-direction:column; gap:.25rem; }
-.f-group label { font-size:.75rem; font-weight:500; color:var(--ink-muted); }
-.f-group select, .f-group input { padding:.4rem .75rem; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:.875rem; color:var(--ink); background:var(--paper); outline:none; }
-.f-group select:focus, .f-group input:focus { border-color:var(--accent); }
-.f-actions { display:flex; gap:.5rem; margin-top:auto; }
-.btn-filter { padding:.4rem 1rem; background:var(--ink); color:var(--paper); border:none; border-radius:var(--radius-sm); font-size:.85rem; font-weight:500; cursor:pointer; transition:background .2s; }
-.btn-filter:hover { background:var(--accent); }
-.btn-reset  { padding:.4rem 1rem; background:transparent; color:var(--ink-muted); border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.85rem; cursor:pointer; text-decoration:none; }
-
-/* ── Table ─────────────────────────────────────────────────────── */
-.table-wrap { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; }
-.table-head { display:flex; justify-content:space-between; align-items:center; padding:1rem 1.5rem; border-bottom:1px solid var(--border); }
-.table-head h2 { font-family:var(--font-display); font-size:1.1rem; }
-table { width:100%; border-collapse:collapse; }
-th { text-align:left; font-size:.7rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); padding:.8rem 1.5rem; border-bottom:1px solid var(--border-soft); background:var(--paper); }
-td { padding:.8rem 1.5rem; font-size:.875rem; color:var(--ink-soft); border-bottom:1px solid var(--border-soft); }
-tr:last-child td { border-bottom:none; }
-tr:hover td { background:var(--paper); }
-.amount-col { font-family:var(--font-display); font-size:.95rem; color:var(--ink); }
-.act-btns   { display:flex; gap:.4rem; }
-.btn-edit   { padding:.25rem .6rem; background:transparent; color:var(--accent); border:1px solid var(--accent); border-radius:var(--radius-sm); font-size:.72rem; font-weight:500; text-decoration:none; transition:all .2s; }
-.btn-edit:hover { background:var(--accent); color:var(--paper); }
-.btn-del    { padding:.25rem .6rem; background:transparent; color:var(--danger); border:1px solid var(--danger); border-radius:var(--radius-sm); font-size:.72rem; cursor:pointer; transition:all .2s; }
-.btn-del:hover  { background:var(--danger); color:var(--paper); }
-.empty-state { padding:3rem; text-align:center; color:var(--ink-muted); font-size:.9rem; }
-
-@media(max-width:700px){
-  th:nth-child(3), td:nth-child(3),
-  th:nth-child(4), td:nth-child(4) { display:none; }
-}
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="dashboard">
+<div class="page-wrap">
 
-    <!-- Header -->
-    <div class="dash-header">
-        <h1 class="dash-greeting">
-            Hello, <span>{{ user.name.split()[0] }}</span> 👋
-        </h1>
-        <div class="dash-actions">
-            {% if features.reports %}
-            <a href="{{ url_for('reports.index') }}" class="btn-ghost" style="font-size:.85rem;">📊 Reports</a>
-            {% endif %}
-            {% if features.budgets %}
-            <a href="{{ url_for('budgets.index') }}" class="btn-ghost" style="font-size:.85rem;">🎯 Budgets</a>
-            {% endif %}
-            <a href="{{ url_for('expenses.add') }}" class="btn-primary">+ Add Expense</a>
+    <!-- ── Page header ─────────────────────────────────────────── -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-sub">Welcome back, {{ user.name }} · {{ date_from }} → {{ date_to }}</p>
+        </div>
+        <a href="{{ url_for('expenses.add') }}" class="btn-primary">+ Add Expense</a>
+    </div>
+
+    <!-- ── Filter bar ──────────────────────────────────────────── -->
+    <div class="filter-card">
+        <form method="get" action="{{ url_for('expenses.dashboard') }}">
+
+            <!-- Row 1: category, dates, sort -->
+            <div class="filter-row" style="margin-bottom:.65rem;">
+                <div class="filter-group">
+                    <label for="f-cat">Category</label>
+                    <select name="category" id="f-cat" class="filter-input">
+                        <option value="">All categories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.name }}"
+                            {% if category_filter == cat.name %}selected{% endif %}>
+                            {{ cat.icon }} {{ cat.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="f-from">From</label>
+                    <input type="date" name="date_from" id="f-from"
+                           class="filter-input" value="{{ date_from }}">
+                </div>
+
+                <div class="filter-group">
+                    <label for="f-to">To</label>
+                    <input type="date" name="date_to" id="f-to"
+                           class="filter-input" value="{{ date_to }}">
+                </div>
+
+                <div class="filter-group">
+                    <label for="f-sort">Sort by</label>
+                    <select name="sort_by" id="f-sort" class="filter-input">
+                        <option value="date_desc"   {% if sort_by=='date_desc'   %}selected{% endif %}>Date (Newest)</option>
+                        <option value="date_asc"    {% if sort_by=='date_asc'    %}selected{% endif %}>Date (Oldest)</option>
+                        <option value="amount_desc" {% if sort_by=='amount_desc' %}selected{% endif %}>Amount (High → Low)</option>
+                        <option value="amount_asc"  {% if sort_by=='amount_asc'  %}selected{% endif %}>Amount (Low → High)</option>
+                        <option value="category"    {% if sort_by=='category'    %}selected{% endif %}>Category A–Z</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 2: search, amount range, buttons -->
+            <div class="filter-row">
+                <div class="filter-group" style="flex:2; min-width:200px;">
+                    <label for="f-search">Search title / note</label>
+                    <input type="text" name="search" id="f-search"
+                           class="filter-input" placeholder="e.g. grocery, uber…"
+                           value="{{ search }}">
+                </div>
+
+                <div class="filter-group">
+                    <label for="f-amin">Min amount</label>
+                    <input type="number" name="amount_min" id="f-amin"
+                           class="filter-input" min="0" step="1"
+                           placeholder="{{ currency }}0"
+                           value="{{ amount_min }}">
+                </div>
+
+                <div class="filter-group">
+                    <label for="f-amax">Max amount</label>
+                    <input type="number" name="amount_max" id="f-amax"
+                           class="filter-input" min="0" step="1"
+                           placeholder="Any"
+                           value="{{ amount_max }}">
+                </div>
+
+                <div class="filter-group" style="justify-content:flex-end; flex-direction:row; align-items:flex-end; gap:.5rem;">
+                    <button type="submit" class="filter-btn">Apply</button>
+                    <a href="{{ url_for('expenses.dashboard') }}" class="filter-reset">Reset</a>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- ── Summary stat cards ──────────────────────────────────── -->
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Spent</div>
+            <div class="stat-value accent">{{ total | currency }}</div>
+            <div class="stat-meta">{{ expenses | length }} expense{{ 's' if expenses | length != 1 }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Average Expense</div>
+            <div class="stat-value">{{ avg_expense | currency }}</div>
+            <div class="stat-meta">per transaction</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Categories</div>
+            <div class="stat-value amber">{{ by_category | length }}</div>
+            <div class="stat-meta">active this period</div>
+        </div>
+
+        {% set top_cat = cat_summary[0] if cat_summary else None %}
+        <div class="stat-card">
+            <div class="stat-label">Top Category</div>
+            <div class="stat-value">
+                {% if top_cat %}{{ top_cat.icon }} {{ top_cat.category }}{% else %}—{% endif %}
+            </div>
+            <div class="stat-meta">
+                {% if top_cat %}{{ top_cat.total | currency }} &middot; {{ top_cat.pct }}% of total{% endif %}
+            </div>
         </div>
     </div>
 
-    <!-- Summary cards -->
-    <div class="summary-grid">
-        <div class="summary-card">
-            <div class="s-label">Period Spent</div>
-            <div class="s-value accent">{{ currency }}{{ "{:,.0f}".format(total) }}</div>
-        </div>
-        <div class="summary-card">
-            <div class="s-label">Transactions</div>
-            <div class="s-value">{{ expenses|length }}</div>
-        </div>
-        <div class="summary-card">
-            <div class="s-label">Categories</div>
-            <div class="s-value">{{ by_category|length }}</div>
-        </div>
-        {% if expenses %}
-        <div class="summary-card">
-            <div class="s-label">Avg. per Expense</div>
-            <div class="s-value">{{ currency }}{{ "{:,.0f}".format(total / expenses|length) }}</div>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Charts -->
+    <!-- ── Charts (3-up grid) ───────────────────────────────────── -->
     {% if features.charts and expenses %}
-    <div class="charts-row">
-        <!-- Category donut -->
-        <div class="chart-card">
-            <div class="chart-title">Spending by Category</div>
-            <canvas id="pieChart" height="200"></canvas>
-        </div>
-        <!-- Daily line + budget bars -->
-        <div class="chart-card">
-            <div class="chart-title">Daily Spending</div>
-            <canvas id="lineChart" height="145"></canvas>
+    <div class="charts-grid">
 
+        <!-- Doughnut: spend by category -->
+        <div class="chart-card">
+            <div class="chart-card-title">Spend by Category</div>
+            <div class="chart-canvas-wrap">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Line: daily spend trend -->
+        <div class="chart-card">
+            <div class="chart-card-title">Daily Spend Trend</div>
+            <div class="chart-canvas-wrap">
+                <canvas id="lineChart"></canvas>
+            </div>
             {% if budgets %}
-            <div class="budget-mini-section">
-                <div class="budget-mini-label">Budget Usage</div>
-                {% for cat in categories %}
-                    {% if budgets.get(cat.name) %}
-                    {% set lim  = budgets[cat.name] %}
-                    {% set used = by_category.get(cat.name, 0) %}
-                    {% set pct  = [[((used / lim * 100) | round(1)), 100] | min, 0] | max %}
-                    <div class="b-row">
-                        <span class="b-cat">{{ cat.icon }} {{ cat.name }}</span>
-                        <div class="b-track">
-                            <div class="b-fill" style="width:{{ pct }}%;
-                                 background:{{ '#c0392b' if used > lim else cat.color }}">
+            <div class="budget-bars">
+                {% for cat_cfg in categories %}
+                    {% set b = budgets.get(cat_cfg.name, 0) %}
+                    {% if b > 0 %}
+                        {% set spent = by_category.get(cat_cfg.name, 0) %}
+                        {% set pct   = [[((spent / b * 100) | round | int), 0] | max, 100] | min %}
+                        <div class="budget-bar-row">
+                            <span class="budget-bar-label">{{ cat_cfg.icon }} {{ cat_cfg.name }}</span>
+                            <div class="budget-bar-track">
+                                <div class="budget-bar-fill"
+                                     style="width:{{ pct }}%;
+                                            background:{% if pct >= 100 %}var(--danger){% else %}{{ cat_cfg.color }}{% endif %};">
+                                </div>
                             </div>
+                            <span class="budget-bar-pct">{{ pct }}%</span>
                         </div>
-                        <span class="b-pct">{{ pct }}%</span>
-                    </div>
                     {% endif %}
                 {% endfor %}
             </div>
             {% endif %}
         </div>
+
+        <!-- Bar: weekly spend by day-of-week -->
+        <div class="chart-card">
+            <div class="chart-card-title">Spend by Day of Week</div>
+            <div class="chart-canvas-wrap">
+                <canvas id="weeklyChart"></canvas>
+            </div>
+        </div>
+
     </div>
     {% endif %}
 
-    <!-- Filter bar -->
-    <form method="GET" action="{{ url_for('expenses.dashboard') }}">
-        <div class="filters-bar">
-            <div class="f-group">
-                <label>Category</label>
-                <select name="category">
-                    <option value="">All categories</option>
-                    {% for cat in categories %}
-                    <option value="{{ cat.name }}"
-                        {% if category_filter == cat.name %}selected{% endif %}>
-                        {{ cat.icon }} {{ cat.name }}
-                    </option>
+    <!-- ── Category summary table ───────────────────────────────── -->
+    {% if cat_summary %}
+    <div class="section-title">Category Breakdown</div>
+    <div class="table-card" style="margin-bottom:1.75rem;">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th class="num"># Expenses</th>
+                        <th class="num">Total Spent</th>
+                        <th class="num">% of Total</th>
+                        <th class="num">Monthly Budget</th>
+                        <th class="num">Surplus / Deficit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in cat_summary %}
+                    <tr>
+                        <td>
+                            <span class="badge"
+                                  style="background:{{ row.color }}20; color:{{ row.color }};">
+                                {{ row.icon }} {{ row.category }}
+                            </span>
+                        </td>
+                        <td class="num">{{ row.count }}</td>
+                        <td class="amount">{{ row.total | currency }}</td>
+                        <td class="num">{{ row.pct }}%</td>
+                        <td class="num">
+                            {% if row.budget %}{{ row.budget | currency }}{% else %}<span class="neutral">—</span>{% endif %}
+                        </td>
+                        <td class="num">
+                            {% if row.surplus is not none %}
+                                {% if row.surplus >= 0 %}
+                                    <span class="surplus">+{{ row.surplus | currency }}</span>
+                                {% else %}
+                                    <span class="deficit">{{ row.surplus | currency }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="neutral">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
                     {% endfor %}
-                </select>
-            </div>
-            <div class="f-group">
-                <label>From</label>
-                <input type="date" name="date_from" value="{{ date_from }}">
-            </div>
-            <div class="f-group">
-                <label>To</label>
-                <input type="date" name="date_to" value="{{ date_to }}">
-            </div>
-            <div class="f-actions">
-                <button type="submit" class="btn-filter">Filter</button>
-                <a href="{{ url_for('expenses.dashboard') }}" class="btn-reset">Reset</a>
-            </div>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td><strong>Total</strong></td>
+                        <td class="num"><strong>{{ expenses | length }}</strong></td>
+                        <td class="amount"><strong>{{ total | currency }}</strong></td>
+                        <td class="num"><strong>100%</strong></td>
+                        <td class="num">—</td>
+                        <td class="num">—</td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
-    </form>
-
-    <!-- Expense table -->
-    <div class="table-wrap">
-        <div class="table-head">
-            <h2>Expenses</h2>
-            <span style="font-size:.8rem;color:var(--ink-muted);">
-                {{ expenses|length }} record{{ 's' if expenses|length != 1 }}
-            </span>
-        </div>
-
-        {% if expenses %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Category</th>
-                    <th>Date</th>
-                    <th>Note</th>
-                    <th>Amount</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for e in expenses %}
-            <tr>
-                <td><strong>{{ e.title }}</strong></td>
-                <td>
-                    <!-- Badge color driven by config CATEGORY_BG / CATEGORY_COLORS -->
-                    {% set cat_meta = categories | selectattr("name","eq",e.category) | first | default(None) %}
-                    {% if cat_meta %}
-                    <span class="badge"
-                          style="background:{{ cat_meta.bg }};color:{{ cat_meta.color }}">
-                        {{ cat_meta.icon }} {{ e.category }}
-                    </span>
-                    {% else %}
-                    <span class="badge" style="background:#f0f0f0;color:#555">{{ e.category }}</span>
-                    {% endif %}
-                </td>
-                <td>{{ e.date }}</td>
-                <td>{{ e.description or '—' }}</td>
-                <td class="amount-col">{{ currency }}{{ "{:,.0f}".format(e.amount) }}</td>
-                <td>
-                    <div class="act-btns">
-                        <a href="{{ url_for('expenses.edit', expense_id=e.id) }}" class="btn-edit">Edit</a>
-                        <form method="POST"
-                              action="{{ url_for('expenses.delete', expense_id=e.id) }}"
-                              onsubmit="return confirm('Delete this expense?')">
-                            <button type="submit" class="btn-del">Delete</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <div class="empty-state">
-            No expenses found for this period.
-            <a href="{{ url_for('expenses.add') }}" style="color:var(--accent);font-weight:500;">
-                Add one →
-            </a>
-        </div>
-        {% endif %}
     </div>
+    {% endif %}
+
+    <!-- ── Expense list table ────────────────────────────────────── -->
+    <div class="section-title">Transactions</div>
+    {% if expenses %}
+    <div class="table-card">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Date</th>
+                        <th>Note</th>
+                        <th class="num">Amount</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in expenses %}
+                    <tr>
+                        <td><strong>{{ e.title }}</strong></td>
+                        <td>
+                            {% set cat = categories | selectattr("name","equalto",e.category) | first | default(None) %}
+                            {% if cat %}
+                            <span class="badge"
+                                  style="background:{{ cat.bg }}; color:{{ cat.color }};">
+                                {{ cat.icon }} {{ e.category }}
+                            </span>
+                            {% else %}
+                            {{ e.category }}
+                            {% endif %}
+                        </td>
+                        <td style="white-space:nowrap; color:var(--ink-muted);">{{ e.date }}</td>
+                        <td style="color:var(--ink-muted); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            {{ e.description or "—" }}
+                        </td>
+                        <td class="amount">{{ e.amount | currency }}</td>
+                        <td style="white-space:nowrap;">
+                            <a href="{{ url_for('expenses.edit', expense_id=e.id) }}"
+                               class="action-link edit">Edit</a>
+                            &nbsp;
+                            <form method="post"
+                                  action="{{ url_for('expenses.delete', expense_id=e.id) }}"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('Delete this expense?')">
+                                <button type="submit" class="action-link delete">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="table-card" style="padding:3rem; text-align:center; color:var(--ink-muted);">
+        <div style="font-size:2.5rem; margin-bottom:.75rem;">🔍</div>
+        <p style="font-weight:600;">No expenses found</p>
+        <p style="font-size:.875rem; margin-top:.4rem;">
+            Try adjusting your filters or
+            <a href="{{ url_for('expenses.add') }}"
+               style="color:var(--accent); font-weight:600;">add a new expense</a>.
+        </p>
+    </div>
+    {% endif %}
 
 </div>
 {% endblock %}
 
+
 {% block scripts %}
 {% if features.charts and expenses %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-// Data injected from Flask (JSON-safe via json.dumps in the route)
-const pieLabels  = {{ chart_labels  | safe }};
-const pieData    = {{ chart_amounts | safe }};
-const pieColors  = {{ chart_colors  | safe }};
-const dayLabels  = {{ daily_labels  | safe }};
-const dayData    = {{ daily_amounts | safe }};
-const locale     = "{{ currency_locale }}";
+const pieLabels   = {{ chart_labels   | safe }};
+const pieData     = {{ chart_amounts  | safe }};
+const pieColors   = {{ chart_colors   | safe }};
+const dayLabels   = {{ daily_labels   | safe }};
+const dayData     = {{ daily_amounts  | safe }};
+const weekLabels  = {{ weekly_labels  | safe }};
+const weekData    = {{ weekly_amounts | safe }};
+const currSymbol  = "{{ currency }}";
 
-// Category doughnut chart
+function currencyTooltip(symbol) {
+    return { callbacks: { label: ctx =>
+        ` ${symbol}${(ctx.parsed.y ?? ctx.parsed).toLocaleString()}`
+    }};
+}
+
+/* 1 · Doughnut */
 new Chart(document.getElementById("pieChart"), {
     type: "doughnut",
-    data: {
-        labels: pieLabels,
-        datasets: [{
-            data: pieData,
-            backgroundColor: pieColors,
-            borderWidth: 2,
-            borderColor: "#fff",
-        }],
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: { position: "bottom", labels: { font: { size: 11 } } },
-            tooltip: {
-                callbacks: {
-                    label: ctx => ` {{ currency }}${ctx.parsed.toLocaleString(locale)}`,
-                },
-            },
-        },
-    },
+    data: { labels: pieLabels, datasets: [{ data: pieData,
+        backgroundColor: pieColors, borderWidth: 2, borderColor: "#fff", hoverOffset: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } },
+            tooltip: { callbacks: { label: ctx =>
+                ` ${ctx.label}: ${currSymbol}${ctx.parsed.toLocaleString()}` } } } }
 });
 
-// Daily spending line chart
+/* 2 · Line */
 new Chart(document.getElementById("lineChart"), {
     type: "line",
-    data: {
-        labels: dayLabels,
-        datasets: [{
-            label: "Daily Spend",
-            data: dayData,
-            borderColor: "#1a472a",
-            backgroundColor: "rgba(26,71,42,.08)",
-            fill: true,
-            tension: .4,
-            pointRadius: 3,
-            pointBackgroundColor: "#1a472a",
-        }],
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
+    data: { labels: dayLabels, datasets: [{ label: "Daily Spend", data: dayData,
+        borderColor: "#3d52d5", backgroundColor: "rgba(61,82,213,.08)",
+        fill: true, pointRadius: 3, pointBackgroundColor: "#3d52d5", tension: 0.4 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: currencyTooltip(currSymbol) },
         scales: {
-            y: {
-                beginAtZero: true,
-                ticks: { callback: v => "{{ currency }}" + v.toLocaleString(locale) },
-            },
-            x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } },
-        },
-    },
+            y: { ticks: { callback: v => `${currSymbol}${v.toLocaleString()}`, font: { size: 10 } },
+                 grid: { color: "rgba(0,0,0,.05)" } },
+            x: { ticks: { font: { size: 10 } } } } }
+});
+
+/* 3 · Weekly bar */
+const maxWeek = Math.max(...weekData);
+new Chart(document.getElementById("weeklyChart"), {
+    type: "bar",
+    data: { labels: weekLabels, datasets: [{ label: "Spend", data: weekData,
+        backgroundColor: weekData.map(v => v === maxWeek && v > 0 ? "#f59e0b" : "#3d52d5"),
+        borderRadius: 6, borderSkipped: false }] },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: currencyTooltip(currSymbol) },
+        scales: {
+            y: { ticks: { callback: v => `${currSymbol}${v.toLocaleString()}`, font: { size: 10 } },
+                 grid: { color: "rgba(0,0,0,.05)" } },
+            x: { ticks: { font: { size: 11 } }, grid: { display: false } } } }
 });
 </script>
 {% endif %}

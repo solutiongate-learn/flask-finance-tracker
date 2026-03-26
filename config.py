@@ -22,11 +22,11 @@ import os
 # ║  Change these lines to instantly rebrand the app.   ║
 # ╚══════════════════════════════════════════════════════╝
 
-APP_NAME        = "Spendly"
-APP_TAGLINE     = "Track every rupee. Own your finances."
-APP_DESCRIPTION = "A simple, beautiful personal finance tracker."
+APP_NAME        = "SpendBetter"
+APP_TAGLINE     = "Spend smarter. Live better."
+APP_DESCRIPTION = "A smart personal finance tracker."
 APP_ICON        = "◈"          # Rendered in the navbar & footer
-FOOTER_TEXT     = "Track every rupee. Own your finances."
+FOOTER_TEXT     = "Spend smarter. Live better."
 
 
 # ╔══════════════════════════════════════════════════════╗
@@ -93,21 +93,22 @@ DEFAULT_BUDGETS = {
 # ╚══════════════════════════════════════════════════════╝
 
 THEME = {
-    "ink":           "#0f0f0f",   # Primary text
-    "ink_soft":      "#2d2d2d",   # Secondary text
-    "ink_muted":     "#6b6b6b",   # Muted labels
-    "ink_faint":     "#a0a0a0",   # Placeholder / disabled
-    "paper":         "#f7f6f3",   # Page background
-    "paper_warm":    "#f0ede6",   # Section background
+    "ink":           "#1e2235",   # Primary text
+    "ink_soft":      "#2d3a50",   # Secondary text
+    "ink_muted":     "#5a6580",   # Muted labels
+    "ink_faint":     "#9aa3b8",   # Placeholder / disabled
+    "paper":         "#f1f3f9",   # Page background  (cool slate)
+    "paper_warm":    "#e8eaf3",   # Section background
     "paper_card":    "#ffffff",   # Card background
-    "accent":        "#1a472a",   # Primary action color
-    "accent_light":  "#e8f0eb",   # Accent tint
-    "accent2":       "#c17f24",   # Secondary accent
-    "accent2_light": "#fdf3e3",   # Secondary accent tint
-    "danger":        "#c0392b",   # Error / delete
-    "danger_light":  "#fdecea",   # Error tint
-    "border":        "#e4e1da",   # Card borders
-    "border_soft":   "#eeebe4",   # Subtle dividers
+    "accent":        "#3d52d5",   # Primary action  (bright indigo)
+    "accent_light":  "#e8ebfb",   # Accent tint
+    "accent2":       "#f59e0b",   # Secondary accent (amber)
+    "accent2_light": "#fef3c7",   # Secondary accent tint
+    "navbar":        "#2d3a6b",   # Navbar background (deep navy-indigo)
+    "danger":        "#e53e3e",   # Error / delete
+    "danger_light":  "#fff5f5",   # Error tint
+    "border":        "#dde1ef",   # Card borders
+    "border_soft":   "#eaecf4",   # Subtle dividers
 }
 
 

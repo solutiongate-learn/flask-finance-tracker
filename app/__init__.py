@@ -23,6 +23,13 @@ def create_app() -> Flask:
     # ── Core settings ─────────────────────────────────────────────────
     app.secret_key = config.SECRET_KEY
 
+    # ── Jinja2 filters ────────────────────────────────────────────────
+    from app.helpers import format_currency
+    # Usage in templates:  {{ expense.amount | currency }}
+    app.jinja_env.filters["currency"] = (
+        lambda v: format_currency(v, config.CURRENCY_SYMBOL)
+    )
+
     # ── Register blueprints ───────────────────────────────────────────
     from app.auth     import auth_bp
     from app.expenses import expenses_bp

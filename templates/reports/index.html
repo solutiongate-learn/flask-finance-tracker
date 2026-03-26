@@ -1,246 +1,276 @@
 {% extends "base.html" %}
 {% block title %}Reports — {{ app_name }}{% endblock %}
 
-{% block head %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<style>
-.page-wrap  { max-width:var(--max-width); margin:0 auto; padding:2.5rem 2rem; }
-.page-head  { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
-.page-title { font-family:var(--font-display); font-size:1.75rem; }
-.page-sub   { font-size:.875rem; color:var(--ink-muted); margin-top:.2rem; }
-
-/* Stat row */
-.stat-row  { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:2rem; }
-.stat-pill { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.1rem 1.5rem; flex:1; min-width:140px; }
-.sp-label  { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); margin-bottom:.3rem; }
-.sp-value  { font-family:var(--font-display); font-size:1.45rem; color:var(--ink); }
-.sp-value.accent { color:var(--accent); }
-
-/* Charts */
-.charts-2col { display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
-@media(max-width:700px){ .charts-2col{ grid-template-columns:1fr; } }
-.chart-card  { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.5rem; margin-bottom:1.5rem; }
-.chart-title { font-family:var(--font-display); font-size:1.05rem; margin-bottom:1rem; }
-
-/* Section title */
-.section-h   { font-family:var(--font-display); font-size:1.2rem; margin-bottom:1rem; }
-
-/* Top 5 */
-.top5-grid  { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem; }
-@media(max-width:640px){ .top5-grid{ grid-template-columns:1fr; } }
-.top5-item  { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; }
-.t5-title   { font-weight:600; font-size:.875rem; color:var(--ink); }
-.t5-meta    { font-size:.75rem; color:var(--ink-muted); margin-top:.15rem; }
-.t5-amt     { font-family:var(--font-display); font-size:1.1rem; color:var(--ink); white-space:nowrap; }
-
-/* MoM table */
-.table-wrap { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; }
-table { width:100%; border-collapse:collapse; }
-th { text-align:left; font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); padding:.8rem 1.5rem; border-bottom:1px solid var(--border-soft); background:var(--paper); }
-td { padding:.8rem 1.5rem; font-size:.9rem; border-bottom:1px solid var(--border-soft); }
-tr:last-child td { border-bottom:none; }
-tr:hover td { background:var(--paper); }
-.delta-up   { color:var(--danger); font-size:.8rem; font-weight:600; }
-.delta-down { color:var(--accent); font-size:.8rem; font-weight:600; }
-.delta-none { color:var(--ink-faint); font-size:.8rem; }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="page-wrap">
 
-    <div class="page-head">
+    <!-- ── Page header ─────────────────────────────────────────── -->
+    <div class="page-header">
         <div>
-            <h1 class="page-title">Spending Reports</h1>
-            <p class="page-sub">All-time analysis across {{ total_months }} month{{ 's' if total_months != 1 }}</p>
+            <h1 class="page-title">Reports</h1>
+            <p class="page-sub">All-time analytics across {{ total_months }} month{{ 's' if total_months != 1 }}</p>
         </div>
-        <a href="{{ url_for('expenses.dashboard') }}" class="btn-ghost" style="font-size:.85rem;">← Dashboard</a>
     </div>
 
-    <!-- Stats -->
-    <div class="stat-row">
-        <div class="stat-pill">
-            <div class="sp-label">Total Spent</div>
-            <div class="sp-value accent">{{ currency }}{{ "{:,.0f}".format(total_all_time) }}</div>
+    <!-- ── Summary stat cards ──────────────────────────────────── -->
+    <div class="stat-grid" style="margin-bottom:1.75rem;">
+        <div class="stat-card">
+            <div class="stat-label">Total All-Time</div>
+            <div class="stat-value accent">{{ total_all_time | currency }}</div>
+            <div class="stat-meta">across all categories</div>
         </div>
-        <div class="stat-pill">
-            <div class="sp-label">Months Tracked</div>
-            <div class="sp-value">{{ total_months }}</div>
+        <div class="stat-card">
+            <div class="stat-label">Months Tracked</div>
+            <div class="stat-value">{{ total_months }}</div>
+            <div class="stat-meta">calendar months</div>
         </div>
-        <div class="stat-pill">
-            <div class="sp-label">Avg / Month</div>
-            <div class="sp-value">
-                {{ currency }}{{ "{:,.0f}".format(total_all_time / total_months if total_months else 0) }}
+        <div class="stat-card">
+            <div class="stat-label">Avg Monthly Spend</div>
+            <div class="stat-value amber">{{ avg_monthly | currency }}</div>
+            <div class="stat-meta">per month average</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Biggest Single Expense</div>
+            <div class="stat-value">
+                {% if top5 %}{{ top5[0].amount | currency }}{% else %}—{% endif %}
+            </div>
+            <div class="stat-meta">
+                {% if top5 %}{{ top5[0].title }}{% endif %}
             </div>
         </div>
-        {% if months %}
-        <div class="stat-pill">
-            <div class="sp-label">Lowest Month</div>
-            <div class="sp-value">{{ (months | sort(attribute='total') | first).month }}</div>
-        </div>
-        {% endif %}
     </div>
 
-    <!-- Bar + Pie charts -->
-    <div class="charts-2col">
-        <div class="chart-card" style="margin-bottom:0">
-            <div class="chart-title">Monthly Spending Trend</div>
-            <canvas id="barChart" height="200"></canvas>
+    <!-- ── Charts row 1: monthly bar + all-time doughnut ───────── -->
+    {% if features.charts %}
+    <div class="charts-grid" style="margin-bottom:1.25rem;">
+        <div class="chart-card">
+            <div class="chart-card-title">Monthly Spend Trend</div>
+            <div class="chart-canvas-wrap" style="height:240px;">
+                <canvas id="barChart"></canvas>
+            </div>
         </div>
-        <div class="chart-card" style="margin-bottom:0">
-            <div class="chart-title">All-time by Category</div>
-            <canvas id="pieChart" height="200"></canvas>
+        <div class="chart-card">
+            <div class="chart-card-title">All-Time by Category</div>
+            <div class="chart-canvas-wrap" style="height:240px;">
+                <canvas id="pieChart"></canvas>
+            </div>
         </div>
     </div>
 
-    <!-- Stacked chart -->
-    <div class="chart-card">
-        <div class="chart-title">Category Breakdown by Month</div>
-        <canvas id="stackedChart" height="110"></canvas>
+    <!-- ── Chart row 2: stacked bar + category trend line ──────── -->
+    <div class="charts-grid" style="margin-bottom:1.75rem;">
+        <div class="chart-card">
+            <div class="chart-card-title">Category Breakdown by Month (Stacked)</div>
+            <div class="chart-canvas-wrap" style="height:260px;">
+                <canvas id="stackedChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-card-title">Category Trends (Last 6 Months)</div>
+            <div class="chart-canvas-wrap" style="height:260px;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
     </div>
+    {% endif %}
 
-    <!-- Top 5 -->
-    <div class="section-h">🏆 Top 5 Biggest Expenses</div>
-    <div class="top5-grid">
+    <!-- ── Top 5 expenses ──────────────────────────────────────── -->
+    {% if top5 %}
+    <div class="section-title">Top 5 Biggest Expenses</div>
+    <div class="top5-grid" style="margin-bottom:1.75rem;">
         {% for e in top5 %}
-        {% set cat_meta = categories | selectattr("name","eq",e.category) | first | default(None) %}
+        {% set cat = categories | selectattr("name","equalto",e.category) | first | default(None) %}
         <div class="top5-item">
-            <div>
-                <div class="t5-title">{{ e.title }}</div>
-                <div class="t5-meta">
-                    {% if cat_meta %}{{ cat_meta.icon }} {% endif %}
-                    {{ e.category }} · {{ e.date }}
+            <div class="top5-info">
+                <div class="top5-title">{{ e.title }}</div>
+                <div class="top5-meta">
+                    {% if cat %}
+                    <span class="badge" style="background:{{ cat.bg }}; color:{{ cat.color }}; font-size:.7rem;">
+                        {{ cat.icon }} {{ e.category }}
+                    </span>
+                    {% endif %}
+                    &nbsp;{{ e.date }}
                 </div>
             </div>
-            <div class="t5-amt">{{ currency }}{{ "{:,.0f}".format(e.amount) }}</div>
+            <div class="top5-amount">{{ e.amount | currency }}</div>
         </div>
         {% endfor %}
     </div>
+    {% endif %}
 
-    <!-- Month-over-month table -->
-    <div class="section-h">📅 Month-over-Month</div>
-    <div class="table-wrap">
-        <table>
+    <!-- ── Month-over-month table ───────────────────────────────── -->
+    <div class="section-title">Month-over-Month</div>
+    <div class="table-card" style="margin-bottom:1.75rem;">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th class="num">Total Spent</th>
+                        <th class="num">vs Previous</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in months | reverse %}
+                    <tr>
+                        <td style="font-weight:600;">{{ row.month }}</td>
+                        <td class="amount">{{ row.total | currency }}</td>
+                        <td class="num">
+                            {% if row.delta is none %}
+                                <span class="mom-delta-flat">—</span>
+                            {% elif row.delta > 0 %}
+                                <span class="mom-delta-up">▲ {{ row.delta }}%</span>
+                            {% else %}
+                                <span class="mom-delta-down">▼ {{ (row.delta * -1) }}%</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── Monthly breakdown matrix ─────────────────────────────── -->
+    {% if breakdown and all_months %}
+    <div class="section-title">Monthly Breakdown by Category</div>
+    <div class="matrix-table-wrap">
+        <table class="matrix-table">
             <thead>
                 <tr>
-                    <th>Month</th>
-                    <th>Total Spent</th>
-                    <th>vs Previous</th>
+                    <th>Category</th>
+                    {% for m in all_months %}
+                    <th>{{ m }}</th>
+                    {% endfor %}
+                    <th>Total</th>
                 </tr>
             </thead>
             <tbody>
-                {% for m in months | reverse %}
+                {% for row in breakdown %}
                 <tr>
-                    <td><strong>{{ m.month }}</strong></td>
-                    <td>{{ currency }}{{ "{:,.0f}".format(m.total) }}</td>
                     <td>
-                        {% if m.delta is none %}
-                            <span class="delta-none">—</span>
-                        {% elif m.delta > 0 %}
-                            <span class="delta-up">▲ {{ m.delta }}%</span>
-                        {% else %}
-                            <span class="delta-down">▼ {{ (m.delta | abs) }}%</span>
-                        {% endif %}
+                        <span style="display:inline-flex; align-items:center; gap:.4rem;">
+                            <span style="width:8px;height:8px;border-radius:50%;background:{{ row.color }};flex-shrink:0;"></span>
+                            {{ row.icon }} {{ row.category }}
+                        </span>
                     </td>
+                    {% for m in all_months %}
+                    {% set val = row.monthly.get(m, 0) %}
+                    <td>
+                        {% if val > 0 %}{{ val | currency }}{% else %}<span class="cell-zero">—</span>{% endif %}
+                    </td>
+                    {% endfor %}
+                    <td style="font-weight:700;">{{ row.total | currency }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
+            <tfoot>
+                <tr>
+                    <td><strong>Grand Total</strong></td>
+                    {% for m in all_months %}
+                    <td><strong>{{ grand_monthly.get(m, 0) | currency }}</strong></td>
+                    {% endfor %}
+                    <td><strong>{{ total_all_time | currency }}</strong></td>
+                </tr>
+            </tfoot>
         </table>
     </div>
+    {% endif %}
 
 </div>
 {% endblock %}
 
+
 {% block scripts %}
+{% if features.charts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
-// All data injected as JSON by the Flask route
 const barLabels     = {{ bar_labels     | safe }};
 const barAmounts    = {{ bar_amounts    | safe }};
+const stackedData   = {{ stacked        | safe }};
+const stackedMonths = {{ stacked_months | safe }};
 const pieLabels     = {{ pie_labels     | safe }};
 const pieAmounts    = {{ pie_amounts    | safe }};
 const pieColors     = {{ pie_colors     | safe }};
-const stackedMonths = {{ stacked_months | safe }};
-const stacked       = {{ stacked        | safe }};
 const catColors     = {{ cat_colors     | safe }};
-const locale        = "{{ currency_locale }}";
-const sym           = "{{ currency }}";
+const trendMonths   = {{ trend_months   | safe }};
+const trendData     = {{ trend_data     | safe }};
+const currSymbol    = "{{ currency }}";
 
-// Monthly bar chart
+function yAxis(sym) {
+    return { y: { ticks: { callback: v => `${sym}${v.toLocaleString()}`,
+                            font: { size: 10 } },
+                  grid: { color: "rgba(0,0,0,.05)" } },
+             x: { ticks: { font: { size: 10 } } } };
+}
+function currTip(sym) {
+    return { callbacks: { label: ctx =>
+        ` ${ctx.dataset.label ?? ctx.label}: ${sym}${
+            (ctx.parsed.y ?? ctx.parsed).toLocaleString()}` } };
+}
+
+/* 1 · Monthly bar */
 new Chart(document.getElementById("barChart"), {
     type: "bar",
-    data: {
-        labels: barLabels,
-        datasets: [{
-            label: "Total Spent",
-            data: barAmounts,
-            backgroundColor: "#1a472a",
-            borderRadius: 6,
-            borderSkipped: false,
-        }],
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-            y: { beginAtZero: true, ticks: { callback: v => sym + v.toLocaleString(locale) } },
-        },
-    },
+    data: { labels: barLabels, datasets: [{
+        label: "Monthly Spend", data: barAmounts,
+        backgroundColor: "#3d52d5", borderRadius: 6, borderSkipped: false }] },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: currTip(currSymbol) },
+        scales: yAxis(currSymbol) }
 });
 
-// All-time doughnut
+/* 2 · All-time doughnut */
 new Chart(document.getElementById("pieChart"), {
     type: "doughnut",
-    data: {
-        labels: pieLabels,
-        datasets: [{
-            data: pieAmounts,
-            backgroundColor: pieColors,
-            borderWidth: 2,
-            borderColor: "#fff",
-        }],
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: { position: "bottom", labels: { font: { size: 11 } } },
-            tooltip: { callbacks: { label: ctx => ` ${sym}${ctx.parsed.toLocaleString(locale)}` } },
-        },
-    },
+    data: { labels: pieLabels, datasets: [{
+        data: pieAmounts, backgroundColor: pieColors,
+        borderWidth: 2, borderColor: "#fff", hoverOffset: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } },
+            tooltip: { callbacks: { label: ctx =>
+                ` ${ctx.label}: ${currSymbol}${ctx.parsed.toLocaleString()}` } } } }
 });
 
-// Category-stacked bar chart
-const catNames = {{ category_names | tojson }};
-const stackedDS = catNames
-    .filter(cat => stacked[cat] && stacked[cat].some(v => v > 0))
-    .map(cat => ({
-        label: cat,
-        data: stacked[cat],
+/* 3 · Stacked bar */
+const stackedDatasets = Object.entries(stackedData)
+    .filter(([, vals]) => vals.some(v => v > 0))
+    .map(([cat, vals]) => ({
+        label: cat, data: vals,
         backgroundColor: catColors[cat] || "#888",
-        borderRadius: 2,
+        borderWidth: 0, borderRadius: 3,
     }));
 
 new Chart(document.getElementById("stackedChart"), {
     type: "bar",
-    data: { labels: stackedMonths, datasets: stackedDS },
-    options: {
-        responsive: true,
-        scales: {
-            x: { stacked: true },
-            y: {
-                stacked: true,
-                beginAtZero: true,
-                ticks: { callback: v => sym + v.toLocaleString(locale) },
-            },
-        },
-        plugins: {
-            legend: { position: "bottom", labels: { font: { size: 11 } } },
-            tooltip: {
-                callbacks: {
-                    label: ctx => ` ${ctx.dataset.label}: ${sym}${ctx.parsed.y.toLocaleString(locale)}`,
-                },
-            },
-        },
-    },
+    data: { labels: stackedMonths, datasets: stackedDatasets },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 10 } } },
+            tooltip: currTip(currSymbol) },
+        scales: { ...yAxis(currSymbol),
+            x: { stacked: true, ticks: { font: { size: 10 } } },
+            y: { stacked: true, ticks: { callback: v =>
+                `${currSymbol}${v.toLocaleString()}`, font: { size: 10 } },
+                grid: { color: "rgba(0,0,0,.05)" } } } }
+});
+
+/* 4 · Category trend multi-line */
+const trendDatasets = Object.entries(trendData).map(([cat, vals]) => ({
+    label: cat, data: vals,
+    borderColor: catColors[cat] || "#888",
+    backgroundColor: "transparent",
+    pointRadius: 4, pointBackgroundColor: catColors[cat] || "#888",
+    tension: 0.4, borderWidth: 2,
+}));
+
+new Chart(document.getElementById("trendChart"), {
+    type: "line",
+    data: { labels: trendMonths, datasets: trendDatasets },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 10 } } },
+            tooltip: currTip(currSymbol) },
+        scales: yAxis(currSymbol) }
 });
 </script>
+{% endif %}
 {% endblock %}
