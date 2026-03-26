@@ -42,7 +42,7 @@ python run.py
 
 Open **http://localhost:5001** in your browser.
 
-**Demo login:** `nitish@example.com` / `password123`
+**Demo login:** `demo@spendbetter.com` / `SpendBetter@1`
 
 ---
 

@@ -67,7 +67,7 @@ def seed_db() -> None:
     """
     Populate the database with realistic demo data.
     Guarded by a row-count check — runs only on a fresh (empty) database.
-    Demo credentials: nitish@example.com / password123
+    Demo credentials: demo@spendbetter.com / SpendBetter@1
     """
     from database.seed import run_seed
     run_seed()
