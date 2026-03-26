@@ -21,9 +21,9 @@ import config
 
 # ── Demo credentials ──────────────────────────────────────────────────
 DEMO_USER = {
-    "name":     "Nitish Kumar",
-    "email":    "nitish@example.com",
-    "password": "password123",   # hashed before storage
+    "name":     "Sudhanshu Singh",
+    "email":    "demo@spendbetter.com",
+    "password": "SpendBetter@1",   # hashed before storage
 }
 
 # ── Sample expenses: 6 months of varied, realistic data ──────────────

@@ -10,12 +10,40 @@
             <p class="auth-subtitle">Sign in to your {{ app_name }} account</p>
         </div>
 
+        <!-- ── Demo credentials card ──────────────────────────────── -->
+        <div class="demo-card">
+            <div class="demo-card-label">
+                <span class="demo-dot"></span>
+                Try the live demo — pre-loaded with 6 months of data
+            </div>
+            <div class="demo-fields">
+                <div class="demo-field">
+                    <span class="demo-field-label">Email</span>
+                    <span class="demo-field-value" id="demo-email">demo@spendbetter.com</span>
+                    <button class="demo-copy-btn" onclick="copyDemo('demo-email', this)" title="Copy email">
+                        Copy
+                    </button>
+                </div>
+                <div class="demo-field">
+                    <span class="demo-field-label">Password</span>
+                    <span class="demo-field-value" id="demo-pass">SpendBetter@1</span>
+                    <button class="demo-copy-btn" onclick="copyDemo('demo-pass', this)" title="Copy password">
+                        Copy
+                    </button>
+                </div>
+            </div>
+            <button class="demo-fill-btn" onclick="fillDemo()">
+                ↙ Auto-fill &amp; sign in
+            </button>
+        </div>
+
+        <!-- ── Login form ─────────────────────────────────────────── -->
         <div class="auth-card">
             {% if error %}
             <div class="auth-error">{{ error }}</div>
             {% endif %}
 
-            <form method="POST" action="{{ url_for('auth.login') }}">
+            <form method="POST" action="{{ url_for('auth.login') }}" id="login-form">
                 <div class="form-group">
                     <label for="email">Email address</label>
                     <input type="email" id="email" name="email"
@@ -28,7 +56,7 @@
                            class="form-input" placeholder="Your password"
                            required>
                 </div>
-                <button type="submit" class="btn-submit">Sign in</button>
+                <button type="submit" class="btn-submit">Sign in →</button>
             </form>
         </div>
 
@@ -37,11 +65,34 @@
             <a href="{{ url_for('auth.register') }}">Create one free</a>
         </p>
 
-        <!-- Demo credentials hint — remove in production -->
-        <p class="auth-switch" style="margin-top:.5rem; font-size:.78rem; color:var(--ink-faint);">
-            Demo: nitish@example.com / password123
-        </p>
-
     </div>
 </section>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+/* Copy a demo field value to clipboard and flash "Copied!" */
+function copyDemo(id, btn) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = "Copied!";
+        btn.style.background = "#0d9488";
+        btn.style.color = "#fff";
+        setTimeout(() => {
+            btn.textContent = orig;
+            btn.style.background = "";
+            btn.style.color = "";
+        }, 1500);
+    });
+}
+
+/* Fill the login form with demo credentials and submit */
+function fillDemo() {
+    document.getElementById("email").value    = document.getElementById("demo-email").textContent;
+    document.getElementById("password").value = document.getElementById("demo-pass").textContent;
+    document.getElementById("login-form").submit();
+}
+</script>
 {% endblock %}
