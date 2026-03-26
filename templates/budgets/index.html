@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Budgets — {{ app_name }}{% endblock %}
+
+{% block head %}
+<style>
+.page-wrap  { max-width:860px; margin:0 auto; padding:2.5rem 2rem; }
+.page-head  { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
+.page-title { font-family:var(--font-display); font-size:1.75rem; color:var(--ink); }
+.page-sub   { font-size:.875rem; color:var(--ink-muted); margin-top:.2rem; }
+
+/* ── Budget cards ── */
+.budget-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2.5rem; }
+@media(max-width:640px){ .budget-grid{ grid-template-columns:1fr; } }
+
+.budget-card { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.4rem; }
+.bc-header   { display:flex; justify-content:space-between; align-items:center; margin-bottom:.85rem; }
+.bc-cat      { font-weight:600; font-size:.95rem; display:flex; align-items:center; gap:.5rem; }
+.bc-amounts  { font-size:.78rem; color:var(--ink-muted); }
+.bc-amounts strong { color:var(--ink); }
+
+.prog-track  { height:8px; background:var(--border-soft); border-radius:999px; overflow:hidden; margin-bottom:.5rem; }
+.prog-bar    { height:100%; border-radius:999px; transition:width .4s; }
+
+.bc-status   { font-size:.75rem; font-weight:500; }
+.status-ok   { color:var(--accent); }
+.status-warn { color:var(--accent-2); }
+.status-over { color:var(--danger); }
+.status-none { color:var(--ink-faint); }
+
+/* ── Edit form ── */
+.edit-card  { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:2rem; }
+.edit-title { font-family:var(--font-display); font-size:1.2rem; color:var(--ink); margin-bottom:1.5rem; }
+.edit-grid  { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+.e-group    { display:flex; flex-direction:column; gap:.3rem; }
+.e-group label { font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-muted); }
+.e-group input { padding:.5rem .75rem; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.9rem; font-family:var(--font-body); color:var(--ink); background:var(--paper); outline:none; }
+.e-group input:focus { border-color:var(--accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+    <div class="page-head">
+        <div>
+            <h1 class="page-title">Monthly Budgets</h1>
+            <p class="page-sub">{{ month }} — set limits and track spending per category</p>
+        </div>
+        <a href="{{ url_for('expenses.dashboard') }}" class="btn-ghost" style="font-size:.85rem;">← Dashboard</a>
+    </div>
+
+    <!-- Progress cards -->
+    <div class="budget-grid">
+        {% for item in summary %}
+        <div class="budget-card">
+            <div class="bc-header">
+                <span class="bc-cat">
+                    <!-- Colour dot -->
+                    <span style="width:10px;height:10px;border-radius:50%;display:inline-block;background:{{ item.color }}"></span>
+                    {{ item.category }}
+                </span>
+                <span class="bc-amounts">
+                    <strong>{{ currency }}{{ "{:,.0f}".format(item.used) }}</strong>
+                    {% if item.limit %} / {{ currency }}{{ "{:,.0f}".format(item.limit) }}{% endif %}
+                </span>
+            </div>
+
+            <div class="prog-track">
+                <div class="prog-bar" style="width:{{ item.pct }}%;
+                     background:{{ '#c0392b' if item.status == 'over'
+                                   else '#c17f24' if item.status == 'warn'
+                                   else item.color }}">
+                </div>
+            </div>
+
+            <div class="bc-status">
+                {% if item.status == 'none' %}
+                    <span class="status-none">No budget set</span>
+                {% elif item.status == 'over' %}
+                    <span class="status-over">
+                        ⚠ Over by {{ currency }}{{ "{:,.0f}".format(item.used - item.limit) }}
+                    </span>
+                {% elif item.status == 'warn' %}
+                    <span class="status-warn">{{ item.pct }}% used — running high</span>
+                {% else %}
+                    <span class="status-ok">
+                        {{ item.pct }}% used — {{ currency }}{{ "{:,.0f}".format(item.remaining) }} left
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Edit form -->
+    <div class="edit-card">
+        <div class="edit-title">✏️ Set Monthly Limits</div>
+        <form method="POST" action="{{ url_for('budgets.index') }}">
+            <div class="edit-grid">
+                {% for item in summary %}
+                <div class="e-group">
+                    <label>{{ item.category }}</label>
+                    <input type="number" name="budget_{{ item.category }}"
+                           placeholder="{{ currency }} amount"
+                           value="{{ '{:.0f}'.format(item.limit) if item.limit else '' }}"
+                           min="1" step="100">
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn-primary">Save Budgets</button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

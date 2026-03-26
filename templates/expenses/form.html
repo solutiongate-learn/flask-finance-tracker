@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Expense — {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-container" style="max-width:520px;">
+
+        <div class="auth-header">
+            <h1 class="auth-title">{{ action }} Expense</h1>
+            <p class="auth-subtitle">
+                {% if action == "Add" %}Log a new expense{% else %}Update this expense{% endif %}
+            </p>
+        </div>
+
+        <div class="auth-card">
+            {% if error %}
+            <div class="auth-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST">
+
+                <!-- Title -->
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title"
+                           class="form-input"
+                           placeholder="e.g. Electricity Bill"
+                           value="{{ expense.title if expense else '' }}"
+                           required autofocus>
+                </div>
+
+                <!-- Amount -->
+                <div class="form-group">
+                    <label for="amount">Amount ({{ currency }})</label>
+                    <input type="number" id="amount" name="amount"
+                           class="form-input"
+                           placeholder="0.00" step="0.01" min="0.01"
+                           value="{{ expense.amount if expense else '' }}"
+                           required>
+                </div>
+
+                <!-- Category — options come from config.CATEGORIES via context_processor -->
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" class="form-input">
+                        {% for cat in categories %}
+                        <option value="{{ cat.name }}"
+                            {% if expense and expense.category == cat.name %}selected
+                            {% elif not expense and loop.last %}selected{% endif %}>
+                            {{ cat.icon }} {{ cat.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Date -->
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" name="date"
+                           class="form-input"
+                           value="{{ expense.date if expense else today }}"
+                           required>
+                </div>
+
+                <!-- Description (optional) -->
+                <div class="form-group">
+                    <label for="description">
+                        Note
+                        <span style="color:var(--ink-faint); font-weight:400;">(optional)</span>
+                    </label>
+                    <input type="text" id="description" name="description"
+                           class="form-input"
+                           placeholder="Short note about this expense"
+                           value="{{ expense.description if expense else '' }}">
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    {{ action }} Expense
+                </button>
+            </form>
+        </div>
+
+        <p class="auth-switch">
+            <a href="{{ url_for('expenses.dashboard') }}"
+               style="color:var(--accent);font-weight:500;">← Back to Dashboard</a>
+        </p>
+
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found — {{ app_name }}{% endblock %}
+{% block content %}
+<div style="text-align:center;padding:6rem 2rem;">
+    <div style="font-size:4rem;margin-bottom:1rem;">404</div>
+    <h1 style="font-family:var(--font-display);font-size:2rem;margin-bottom:1rem;">Page not found</h1>
+    <p style="color:var(--ink-muted);margin-bottom:2rem;">The page you're looking for doesn't exist.</p>
+    <a href="{{ url_for('auth.landing') }}" class="btn-primary">Go home</a>
+</div>
+{% endblock %}

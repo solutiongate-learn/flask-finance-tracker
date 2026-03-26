@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — {{ app_name }}{% endblock %}
+
+{% block head %}
+{% if features.charts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endif %}
+<style>
+/* ── Dashboard layout ──────────────────────────────────────────── */
+.dashboard { max-width:var(--max-width); margin:0 auto; padding:2.5rem 2rem; }
+
+.dash-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
+.dash-greeting { font-family:var(--font-display); font-size:1.75rem; }
+.dash-greeting span { color:var(--accent); }
+.dash-actions { display:flex; gap:.75rem; flex-wrap:wrap; }
+
+/* ── Summary cards ─────────────────────────────────────────────── */
+.summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:2rem; }
+.summary-card { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem 1.5rem; }
+.s-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); margin-bottom:.3rem; }
+.s-value { font-family:var(--font-display); font-size:1.5rem; color:var(--ink); }
+.s-value.accent { color:var(--accent); }
+
+/* ── Charts ────────────────────────────────────────────────────── */
+.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2rem; }
+@media(max-width:700px){ .charts-row{ grid-template-columns:1fr; } }
+.chart-card { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.5rem; }
+.chart-title { font-family:var(--font-display); font-size:1rem; color:var(--ink); margin-bottom:1rem; }
+
+/* ── Budget bars ───────────────────────────────────────────────── */
+.budget-mini-section { margin-top:1.25rem; border-top:1px solid var(--border-soft); padding-top:1rem; }
+.budget-mini-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); margin-bottom:.75rem; }
+.b-row { display:flex; align-items:center; gap:.5rem; margin-bottom:.45rem; font-size:.78rem; }
+.b-cat { width:85px; color:var(--ink-soft); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.b-track { flex:1; height:5px; background:var(--border-soft); border-radius:999px; overflow:hidden; }
+.b-fill  { height:100%; border-radius:999px; transition:width .4s; }
+.b-pct  { width:32px; text-align:right; color:var(--ink-muted); }
+
+/* ── Filters ───────────────────────────────────────────────────── */
+.filters-bar { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem 1.5rem; display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap; margin-bottom:1.5rem; }
+.f-group { display:flex; flex-direction:column; gap:.25rem; }
+.f-group label { font-size:.75rem; font-weight:500; color:var(--ink-muted); }
+.f-group select, .f-group input { padding:.4rem .75rem; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:.875rem; color:var(--ink); background:var(--paper); outline:none; }
+.f-group select:focus, .f-group input:focus { border-color:var(--accent); }
+.f-actions { display:flex; gap:.5rem; margin-top:auto; }
+.btn-filter { padding:.4rem 1rem; background:var(--ink); color:var(--paper); border:none; border-radius:var(--radius-sm); font-size:.85rem; font-weight:500; cursor:pointer; transition:background .2s; }
+.btn-filter:hover { background:var(--accent); }
+.btn-reset  { padding:.4rem 1rem; background:transparent; color:var(--ink-muted); border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.85rem; cursor:pointer; text-decoration:none; }
+
+/* ── Table ─────────────────────────────────────────────────────── */
+.table-wrap { background:var(--paper-card); border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; }
+.table-head { display:flex; justify-content:space-between; align-items:center; padding:1rem 1.5rem; border-bottom:1px solid var(--border); }
+.table-head h2 { font-family:var(--font-display); font-size:1.1rem; }
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; font-size:.7rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); padding:.8rem 1.5rem; border-bottom:1px solid var(--border-soft); background:var(--paper); }
+td { padding:.8rem 1.5rem; font-size:.875rem; color:var(--ink-soft); border-bottom:1px solid var(--border-soft); }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--paper); }
+.amount-col { font-family:var(--font-display); font-size:.95rem; color:var(--ink); }
+.act-btns   { display:flex; gap:.4rem; }
+.btn-edit   { padding:.25rem .6rem; background:transparent; color:var(--accent); border:1px solid var(--accent); border-radius:var(--radius-sm); font-size:.72rem; font-weight:500; text-decoration:none; transition:all .2s; }
+.btn-edit:hover { background:var(--accent); color:var(--paper); }
+.btn-del    { padding:.25rem .6rem; background:transparent; color:var(--danger); border:1px solid var(--danger); border-radius:var(--radius-sm); font-size:.72rem; cursor:pointer; transition:all .2s; }
+.btn-del:hover  { background:var(--danger); color:var(--paper); }
+.empty-state { padding:3rem; text-align:center; color:var(--ink-muted); font-size:.9rem; }
+
+@media(max-width:700px){
+  th:nth-child(3), td:nth-child(3),
+  th:nth-child(4), td:nth-child(4) { display:none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+
+    <!-- Header -->
+    <div class="dash-header">
+        <h1 class="dash-greeting">
+            Hello, <span>{{ user.name.split()[0] }}</span> 👋
+        </h1>
+        <div class="dash-actions">
+            {% if features.reports %}
+            <a href="{{ url_for('reports.index') }}" class="btn-ghost" style="font-size:.85rem;">📊 Reports</a>
+            {% endif %}
+            {% if features.budgets %}
+            <a href="{{ url_for('budgets.index') }}" class="btn-ghost" style="font-size:.85rem;">🎯 Budgets</a>
+            {% endif %}
+            <a href="{{ url_for('expenses.add') }}" class="btn-primary">+ Add Expense</a>
+        </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="s-label">Period Spent</div>
+            <div class="s-value accent">{{ currency }}{{ "{:,.0f}".format(total) }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="s-label">Transactions</div>
+            <div class="s-value">{{ expenses|length }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="s-label">Categories</div>
+            <div class="s-value">{{ by_category|length }}</div>
+        </div>
+        {% if expenses %}
+        <div class="summary-card">
+            <div class="s-label">Avg. per Expense</div>
+            <div class="s-value">{{ currency }}{{ "{:,.0f}".format(total / expenses|length) }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Charts -->
+    {% if features.charts and expenses %}
+    <div class="charts-row">
+        <!-- Category donut -->
+        <div class="chart-card">
+            <div class="chart-title">Spending by Category</div>
+            <canvas id="pieChart" height="200"></canvas>
+        </div>
+        <!-- Daily line + budget bars -->
+        <div class="chart-card">
+            <div class="chart-title">Daily Spending</div>
+            <canvas id="lineChart" height="145"></canvas>
+
+            {% if budgets %}
+            <div class="budget-mini-section">
+                <div class="budget-mini-label">Budget Usage</div>
+                {% for cat in categories %}
+                    {% if budgets.get(cat.name) %}
+                    {% set lim  = budgets[cat.name] %}
+                    {% set used = by_category.get(cat.name, 0) %}
+                    {% set pct  = [[((used / lim * 100) | round(1)), 100] | min, 0] | max %}
+                    <div class="b-row">
+                        <span class="b-cat">{{ cat.icon }} {{ cat.name }}</span>
+                        <div class="b-track">
+                            <div class="b-fill" style="width:{{ pct }}%;
+                                 background:{{ '#c0392b' if used > lim else cat.color }}">
+                            </div>
+                        </div>
+                        <span class="b-pct">{{ pct }}%</span>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filter bar -->
+    <form method="GET" action="{{ url_for('expenses.dashboard') }}">
+        <div class="filters-bar">
+            <div class="f-group">
+                <label>Category</label>
+                <select name="category">
+                    <option value="">All categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.name }}"
+                        {% if category_filter == cat.name %}selected{% endif %}>
+                        {{ cat.icon }} {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="f-group">
+                <label>From</label>
+                <input type="date" name="date_from" value="{{ date_from }}">
+            </div>
+            <div class="f-group">
+                <label>To</label>
+                <input type="date" name="date_to" value="{{ date_to }}">
+            </div>
+            <div class="f-actions">
+                <button type="submit" class="btn-filter">Filter</button>
+                <a href="{{ url_for('expenses.dashboard') }}" class="btn-reset">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Expense table -->
+    <div class="table-wrap">
+        <div class="table-head">
+            <h2>Expenses</h2>
+            <span style="font-size:.8rem;color:var(--ink-muted);">
+                {{ expenses|length }} record{{ 's' if expenses|length != 1 }}
+            </span>
+        </div>
+
+        {% if expenses %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Note</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for e in expenses %}
+            <tr>
+                <td><strong>{{ e.title }}</strong></td>
+                <td>
+                    <!-- Badge color driven by config CATEGORY_BG / CATEGORY_COLORS -->
+                    {% set cat_meta = categories | selectattr("name","eq",e.category) | first | default(None) %}
+                    {% if cat_meta %}
+                    <span class="badge"
+                          style="background:{{ cat_meta.bg }};color:{{ cat_meta.color }}">
+                        {{ cat_meta.icon }} {{ e.category }}
+                    </span>
+                    {% else %}
+                    <span class="badge" style="background:#f0f0f0;color:#555">{{ e.category }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ e.date }}</td>
+                <td>{{ e.description or '—' }}</td>
+                <td class="amount-col">{{ currency }}{{ "{:,.0f}".format(e.amount) }}</td>
+                <td>
+                    <div class="act-btns">
+                        <a href="{{ url_for('expenses.edit', expense_id=e.id) }}" class="btn-edit">Edit</a>
+                        <form method="POST"
+                              action="{{ url_for('expenses.delete', expense_id=e.id) }}"
+                              onsubmit="return confirm('Delete this expense?')">
+                            <button type="submit" class="btn-del">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            No expenses found for this period.
+            <a href="{{ url_for('expenses.add') }}" style="color:var(--accent);font-weight:500;">
+                Add one →
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if features.charts and expenses %}
+<script>
+// Data injected from Flask (JSON-safe via json.dumps in the route)
+const pieLabels  = {{ chart_labels  | safe }};
+const pieData    = {{ chart_amounts | safe }};
+const pieColors  = {{ chart_colors  | safe }};
+const dayLabels  = {{ daily_labels  | safe }};
+const dayData    = {{ daily_amounts | safe }};
+const locale     = "{{ currency_locale }}";
+
+// Category doughnut chart
+new Chart(document.getElementById("pieChart"), {
+    type: "doughnut",
+    data: {
+        labels: pieLabels,
+        datasets: [{
+            data: pieData,
+            backgroundColor: pieColors,
+            borderWidth: 2,
+            borderColor: "#fff",
+        }],
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: "bottom", labels: { font: { size: 11 } } },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ` {{ currency }}${ctx.parsed.toLocaleString(locale)}`,
+                },
+            },
+        },
+    },
+});
+
+// Daily spending line chart
+new Chart(document.getElementById("lineChart"), {
+    type: "line",
+    data: {
+        labels: dayLabels,
+        datasets: [{
+            label: "Daily Spend",
+            data: dayData,
+            borderColor: "#1a472a",
+            backgroundColor: "rgba(26,71,42,.08)",
+            fill: true,
+            tension: .4,
+            pointRadius: 3,
+            pointBackgroundColor: "#1a472a",
+        }],
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { callback: v => "{{ currency }}" + v.toLocaleString(locale) },
+            },
+            x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+        },
+    },
+});
+</script>
+{% endif %}
+{% endblock %}

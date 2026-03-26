@@ -1,0 +1,44 @@
+# ── Python ───────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environment ───────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Environment / secrets ─────────────────────────────────
+.env            # Contains SECRET_KEY and other secrets — never commit!
+
+# ── Database ──────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+database/*.db   # The actual DB file; only schema.sql is tracked
+
+# ── macOS ─────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── IDE / editor ──────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
+logs/
+
+# ── pytest cache ──────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/

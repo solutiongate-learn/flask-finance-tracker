@@ -1,0 +1,22 @@
+# ─────────────────────────────────────────────────────────
+# requirements.txt — Python dependencies
+# ─────────────────────────────────────────────────────────
+# Install with:  pip install -r requirements.txt
+# Or inside venv:
+#   python -m venv venv
+#   source venv/bin/activate        # Windows: venv\Scripts\activate
+#   pip install -r requirements.txt
+# ─────────────────────────────────────────────────────────
+
+# Web framework
+flask==3.1.0
+
+# Password hashing (ships with Flask but pinned for safety)
+werkzeug==3.1.0
+
+# Load .env variables automatically
+python-dotenv==1.0.1
+
+# Testing
+pytest==8.3.5
+pytest-flask==1.3.0

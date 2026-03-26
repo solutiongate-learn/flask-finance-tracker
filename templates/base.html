@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--
+  base.html — Master layout inherited by every page.
+  ====================================================
+  All config values (app_name, currency, categories, features) are injected
+  automatically by the context processor in app/__init__.py.
+  Child templates use block content ... endblock to fill the main area.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+
+    <!-- Google Fonts — change in config.py THEME or swap here -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- ── Navbar ─────────────────────────────────────────────── -->
+    <nav class="navbar">
+        <div class="nav-inner">
+
+            <!-- Brand — app_name and app_icon come from config.py -->
+            <a href="{{ url_for('auth.landing') }}" class="nav-brand">
+                <span class="brand-icon">{{ app_icon }}</span>
+                <span class="brand-name">{{ app_name }}</span>
+            </a>
+
+            <!-- Nav links: different sets for auth vs. guest users -->
+            <div class="nav-links">
+                {% if session.get('user_id') %}
+                    <a href="{{ url_for('expenses.dashboard') }}">Dashboard</a>
+
+                    {% if features.reports %}
+                    <a href="{{ url_for('reports.index') }}">Reports</a>
+                    {% endif %}
+
+                    {% if features.budgets %}
+                    <a href="{{ url_for('budgets.index') }}">Budgets</a>
+                    {% endif %}
+
+                    <a href="{{ url_for('auth.logout') }}" class="nav-cta">Sign out</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}">Sign in</a>
+                    <a href="{{ url_for('auth.register') }}" class="nav-cta">Get started</a>
+                {% endif %}
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- ── Flash messages (success / error) ──────────────────── -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- ── Page content ───────────────────────────────────────── -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ── Footer ─────────────────────────────────────────────── -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <span class="brand-icon">{{ app_icon }}</span>
+            <span class="footer-name">{{ app_name }}</span>
+            <p class="footer-copy">{{ footer_text }}</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
