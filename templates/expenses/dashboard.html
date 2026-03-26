@@ -18,9 +18,9 @@
         <form method="get" action="{{ url_for('expenses.dashboard') }}">
 
             <!-- Row 1: category, dates, sort -->
-            <div class="filter-row" style="margin-bottom:.65rem;">
-                <div class="filter-group">
-                    <label for="f-cat">Category</label>
+            <div class="filter-row-1">
+                <div>
+                    <label class="filter-label" for="f-cat">Category</label>
                     <select name="category" id="f-cat" class="filter-input">
                         <option value="">All categories</option>
                         {% for cat in categories %}
@@ -32,20 +32,20 @@
                     </select>
                 </div>
 
-                <div class="filter-group">
-                    <label for="f-from">From</label>
+                <div>
+                    <label class="filter-label" for="f-from">From</label>
                     <input type="date" name="date_from" id="f-from"
                            class="filter-input" value="{{ date_from }}">
                 </div>
 
-                <div class="filter-group">
-                    <label for="f-to">To</label>
+                <div>
+                    <label class="filter-label" for="f-to">To</label>
                     <input type="date" name="date_to" id="f-to"
                            class="filter-input" value="{{ date_to }}">
                 </div>
 
-                <div class="filter-group">
-                    <label for="f-sort">Sort by</label>
+                <div>
+                    <label class="filter-label" for="f-sort">Sort by</label>
                     <select name="sort_by" id="f-sort" class="filter-input">
                         <option value="date_desc"   {% if sort_by=='date_desc'   %}selected{% endif %}>Date (Newest)</option>
                         <option value="date_asc"    {% if sort_by=='date_asc'    %}selected{% endif %}>Date (Oldest)</option>
@@ -57,32 +57,32 @@
             </div>
 
             <!-- Row 2: search, amount range, buttons -->
-            <div class="filter-row">
-                <div class="filter-group" style="flex:2; min-width:200px;">
-                    <label for="f-search">Search title / note</label>
+            <div class="filter-row-2">
+                <div>
+                    <label class="filter-label" for="f-search">Search title / note</label>
                     <input type="text" name="search" id="f-search"
                            class="filter-input" placeholder="e.g. grocery, uber…"
                            value="{{ search }}">
                 </div>
 
-                <div class="filter-group">
-                    <label for="f-amin">Min amount</label>
+                <div>
+                    <label class="filter-label" for="f-amin">Min amount</label>
                     <input type="number" name="amount_min" id="f-amin"
                            class="filter-input" min="0" step="1"
                            placeholder="{{ currency }}0"
                            value="{{ amount_min }}">
                 </div>
 
-                <div class="filter-group">
-                    <label for="f-amax">Max amount</label>
+                <div>
+                    <label class="filter-label" for="f-amax">Max amount</label>
                     <input type="number" name="amount_max" id="f-amax"
                            class="filter-input" min="0" step="1"
                            placeholder="Any"
                            value="{{ amount_max }}">
                 </div>
 
-                <div class="filter-group" style="justify-content:flex-end; flex-direction:row; align-items:flex-end; gap:.5rem;">
-                    <button type="submit" class="filter-btn">Apply</button>
+                <div class="filter-btns">
+                    <button type="submit" class="filter-apply">Apply</button>
                     <a href="{{ url_for('expenses.dashboard') }}" class="filter-reset">Reset</a>
                 </div>
             </div>
@@ -180,14 +180,22 @@
     <div class="table-card" style="margin-bottom:1.75rem;">
         <div class="table-scroll">
             <table class="data-table">
+                <colgroup>
+                    <col style="width:28%">
+                    <col style="width:12%">
+                    <col style="width:16%">
+                    <col style="width:12%">
+                    <col style="width:16%">
+                    <col style="width:16%">
+                </colgroup>
                 <thead>
                     <tr>
                         <th>Category</th>
-                        <th class="num"># Expenses</th>
-                        <th class="num">Total Spent</th>
-                        <th class="num">% of Total</th>
-                        <th class="num">Monthly Budget</th>
-                        <th class="num">Surplus / Deficit</th>
+                        <th class="r"># Expenses</th>
+                        <th class="r">Total Spent</th>
+                        <th class="r">% of Total</th>
+                        <th class="r">Monthly Budget</th>
+                        <th class="r">Surplus / Deficit</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -199,13 +207,13 @@
                                 {{ row.icon }} {{ row.category }}
                             </span>
                         </td>
-                        <td class="num">{{ row.count }}</td>
+                        <td class="r">{{ row.count }}</td>
                         <td class="amount">{{ row.total | currency }}</td>
-                        <td class="num">{{ row.pct }}%</td>
-                        <td class="num">
+                        <td class="r">{{ row.pct }}%</td>
+                        <td class="r">
                             {% if row.budget %}{{ row.budget | currency }}{% else %}<span class="neutral">—</span>{% endif %}
                         </td>
-                        <td class="num">
+                        <td class="r">
                             {% if row.surplus is not none %}
                                 {% if row.surplus >= 0 %}
                                     <span class="surplus">+{{ row.surplus | currency }}</span>
@@ -222,11 +230,11 @@
                 <tfoot>
                     <tr>
                         <td><strong>Total</strong></td>
-                        <td class="num"><strong>{{ expenses | length }}</strong></td>
+                        <td class="r"><strong>{{ expenses | length }}</strong></td>
                         <td class="amount"><strong>{{ total | currency }}</strong></td>
-                        <td class="num"><strong>100%</strong></td>
-                        <td class="num">—</td>
-                        <td class="num">—</td>
+                        <td class="r"><strong>100%</strong></td>
+                        <td class="r">—</td>
+                        <td class="r">—</td>
                     </tr>
                 </tfoot>
             </table>
@@ -240,13 +248,21 @@
     <div class="table-card">
         <div class="table-scroll">
             <table class="data-table">
+                <colgroup>
+                    <col style="width:28%">
+                    <col style="width:16%">
+                    <col class="hide-sm" style="width:11%">
+                    <col class="hide-md" style="width:22%">
+                    <col style="width:12%">
+                    <col style="width:11%">
+                </colgroup>
                 <thead>
                     <tr>
                         <th>Title</th>
                         <th>Category</th>
-                        <th>Date</th>
-                        <th>Note</th>
-                        <th class="num">Amount</th>
+                        <th class="hide-sm">Date</th>
+                        <th class="hide-md">Note</th>
+                        <th class="r">Amount</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -265,20 +281,18 @@
                             {{ e.category }}
                             {% endif %}
                         </td>
-                        <td style="white-space:nowrap; color:var(--ink-muted);">{{ e.date }}</td>
-                        <td style="color:var(--ink-muted); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                            {{ e.description or "—" }}
-                        </td>
+                        <td class="muted hide-sm">{{ e.date }}</td>
+                        <td class="muted hide-md">{{ e.description or "—" }}</td>
                         <td class="amount">{{ e.amount | currency }}</td>
                         <td style="white-space:nowrap;">
                             <a href="{{ url_for('expenses.edit', expense_id=e.id) }}"
-                               class="action-link edit">Edit</a>
+                               class="tbl-action edit">Edit</a>
                             &nbsp;
                             <form method="post"
                                   action="{{ url_for('expenses.delete', expense_id=e.id) }}"
                                   style="display:inline;"
                                   onsubmit="return confirm('Delete this expense?')">
-                                <button type="submit" class="action-link delete">Delete</button>
+                                <button type="submit" class="tbl-action del">Delete</button>
                             </form>
                         </td>
                     </tr>
@@ -288,14 +302,15 @@
         </div>
     </div>
     {% else %}
-    <div class="table-card" style="padding:3rem; text-align:center; color:var(--ink-muted);">
-        <div style="font-size:2.5rem; margin-bottom:.75rem;">🔍</div>
-        <p style="font-weight:600;">No expenses found</p>
-        <p style="font-size:.875rem; margin-top:.4rem;">
-            Try adjusting your filters or
-            <a href="{{ url_for('expenses.add') }}"
-               style="color:var(--accent); font-weight:600;">add a new expense</a>.
-        </p>
+    <div class="table-card">
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-title">No expenses found</div>
+            <p class="empty-body">
+                Try adjusting your filters or
+                <a href="{{ url_for('expenses.add') }}">add a new expense</a>.
+            </p>
+        </div>
     </div>
     {% endif %}
 

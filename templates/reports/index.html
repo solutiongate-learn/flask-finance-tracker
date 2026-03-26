@@ -13,7 +13,7 @@
     </div>
 
     <!-- ── Summary stat cards ──────────────────────────────────── -->
-    <div class="stat-grid" style="margin-bottom:1.75rem;">
+    <div class="stat-grid">
         <div class="stat-card">
             <div class="stat-label">Total All-Time</div>
             <div class="stat-value accent">{{ total_all_time | currency }}</div>
@@ -42,32 +42,32 @@
 
     <!-- ── Charts row 1: monthly bar + all-time doughnut ───────── -->
     {% if features.charts %}
-    <div class="charts-grid" style="margin-bottom:1.25rem;">
+    <div class="charts-grid-2">
         <div class="chart-card">
             <div class="chart-card-title">Monthly Spend Trend</div>
-            <div class="chart-canvas-wrap" style="height:240px;">
+            <div class="chart-canvas-wrap tall">
                 <canvas id="barChart"></canvas>
             </div>
         </div>
         <div class="chart-card">
             <div class="chart-card-title">All-Time by Category</div>
-            <div class="chart-canvas-wrap" style="height:240px;">
+            <div class="chart-canvas-wrap tall">
                 <canvas id="pieChart"></canvas>
             </div>
         </div>
     </div>
 
     <!-- ── Chart row 2: stacked bar + category trend line ──────── -->
-    <div class="charts-grid" style="margin-bottom:1.75rem;">
+    <div class="charts-grid-2">
         <div class="chart-card">
             <div class="chart-card-title">Category Breakdown by Month (Stacked)</div>
-            <div class="chart-canvas-wrap" style="height:260px;">
+            <div class="chart-canvas-wrap tall">
                 <canvas id="stackedChart"></canvas>
             </div>
         </div>
         <div class="chart-card">
             <div class="chart-card-title">Category Trends (Last 6 Months)</div>
-            <div class="chart-canvas-wrap" style="height:260px;">
+            <div class="chart-canvas-wrap tall">
                 <canvas id="trendChart"></canvas>
             </div>
         </div>
@@ -77,19 +77,19 @@
     <!-- ── Top 5 expenses ──────────────────────────────────────── -->
     {% if top5 %}
     <div class="section-title">Top 5 Biggest Expenses</div>
-    <div class="top5-grid" style="margin-bottom:1.75rem;">
+    <div class="top5-grid">
         {% for e in top5 %}
         {% set cat = categories | selectattr("name","equalto",e.category) | first | default(None) %}
         <div class="top5-item">
-            <div class="top5-info">
+            <div>
                 <div class="top5-title">{{ e.title }}</div>
                 <div class="top5-meta">
                     {% if cat %}
-                    <span class="badge" style="background:{{ cat.bg }}; color:{{ cat.color }}; font-size:.7rem;">
+                    <span class="badge" style="background:{{ cat.bg }}; color:{{ cat.color }};">
                         {{ cat.icon }} {{ e.category }}
                     </span>
                     {% endif %}
-                    &nbsp;{{ e.date }}
+                    {{ e.date }}
                 </div>
             </div>
             <div class="top5-amount">{{ e.amount | currency }}</div>
@@ -100,14 +100,19 @@
 
     <!-- ── Month-over-month table ───────────────────────────────── -->
     <div class="section-title">Month-over-Month</div>
-    <div class="table-card" style="margin-bottom:1.75rem;">
+    <div class="table-card">
         <div class="table-scroll">
             <table class="data-table">
+                <colgroup>
+                    <col style="width:50%">
+                    <col style="width:25%">
+                    <col style="width:25%">
+                </colgroup>
                 <thead>
                     <tr>
                         <th>Month</th>
-                        <th class="num">Total Spent</th>
-                        <th class="num">vs Previous</th>
+                        <th class="r">Total Spent</th>
+                        <th class="r">vs Previous</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -115,7 +120,7 @@
                     <tr>
                         <td style="font-weight:600;">{{ row.month }}</td>
                         <td class="amount">{{ row.total | currency }}</td>
-                        <td class="num">
+                        <td class="r">
                             {% if row.delta is none %}
                                 <span class="mom-delta-flat">—</span>
                             {% elif row.delta > 0 %}
